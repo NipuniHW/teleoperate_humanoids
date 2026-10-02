@@ -38,10 +38,11 @@ they publish `/joint_states`, and you pair that with a URDF + `robot_state_publi
 - Python 3.10+, `numpy`
 - [ZED SDK](https://www.stereolabs.com/developers/release) + the
   [ZED ROS 2 wrapper](https://github.com/stereolabs/zed-ros2-wrapper) if you're using a
-  **live camera**. If you're only ever replaying a provided `ros2 bag`, you still need
-  the `zed_msgs` package installed (it defines the message type the bag's messages
-  deserialize into), but you don't need the camera, the ZED SDK, or the wrapper process
-  itself.
+  **live camera** — see [Installing the ZED2i SDK](#installing-the-zed2i-sdk-for-a-live-camera)
+  below for the full from-scratch walkthrough. If you're only ever replaying a provided
+  `ros2 bag`, you still need the `zed_msgs` package installed (it defines the message
+  type the bag's messages deserialize into), but you don't need the camera, the ZED SDK,
+  or the wrapper process itself.
 - **Pepper / NAO only**: the SoftBank/Aldebaran NAOqi `qi` Python SDK, importable in the
   same Python environment you run this package with. **Run Pepper/NAO teleoperation on
   the host, not inside a devcontainer** — we hit a reproducible `RuntimeError: No
@@ -57,6 +58,83 @@ they publish `/joint_states`, and you pair that with a URDF + `robot_state_publi
   ```bash
   sudo apt-get install -y ros-humble-xacro ros-humble-rviz2
   ```
+
+---
+
+## Installing the ZED2i SDK (for a live camera)
+
+Skip this whole section if you're only ever replaying a provided `ros2 bag` — you don't
+need a camera, the SDK, or any of the below. If you have a physical ZED2i and want to
+drive a robot from it directly, here's the real, from-scratch path (verified against
+Stereolabs' current official docs, not the parent repo's prebuilt Docker image, which
+isn't something you have access to from this standalone package).
+
+**1. Prerequisites**: Ubuntu 22.04, an NVIDIA GPU with driver 550+ installed, and a USB3
+port for the camera. CUDA will be installed automatically by the SDK installer below if
+it isn't already present.
+
+**2. Install the ZED SDK:**
+
+```bash
+sudo apt install zstd
+```
+
+Download the Ubuntu 22.04 installer for your CUDA version from
+[stereolabs.com/developers/release](https://www.stereolabs.com/developers/release/),
+then:
+
+```bash
+chmod +x ZED_SDK_UbuntuXX_cudaYY.Y_vZ.Z.Z.zstd.run
+./ZED_SDK_UbuntuXX_cudaYY.Y_vZ.Z.Z.zstd.run
+```
+
+Follow the prompts — accept the license, let it install the Python API and tools, and
+say yes when it offers to download the AI models (body tracking needs these). Reboot
+once it's done so updated paths take effect. It installs to `/usr/local/zed`.
+
+**3. Verify the SDK sees your camera** — plug the ZED2i into a USB3 port, then:
+
+```bash
+/usr/local/zed/tools/ZED_Explorer     # shows the live raw video feed if detected
+/usr/local/zed/tools/ZED_Diagnostic   # hardware/software diagnostic report
+```
+
+Don't move on to the ROS 2 wrapper until `ZED_Explorer` actually shows a live image —
+anything else (camera not detected, USB errors) is an SDK/hardware problem, not
+something fixable at the ROS layer.
+
+**4. Build the ZED ROS 2 wrapper** (official source, no prebuilt image needed):
+
+```bash
+mkdir -p ~/zed_ros2_ws/src
+cd ~/zed_ros2_ws/src
+git clone https://github.com/stereolabs/zed-ros2-wrapper.git
+cd ~/zed_ros2_ws
+sudo apt update
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc)
+source install/local_setup.bash
+```
+
+**5. Launch it, with body tracking enabled:**
+
+```bash
+ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i body_trk_enabled:=true
+```
+
+Confirm skeleton data is actually flowing before moving on to this package:
+
+```bash
+ros2 topic hz /zed/zed_node/body_trk/skeletons
+```
+
+If that hangs with no output, go back to step 3 before suspecting anything downstream.
+
+Prefer Docker over a native install? Stereolabs publishes official ZED SDK images — see
+[stereolabs.com/docs/docker](https://www.stereolabs.com/docs/docker/install-guide-linux) —
+you'd still build `zed-ros2-wrapper` from source (step 4) inside that container, since
+there's no prebuilt image bundling both the SDK and the wrapper.
 
 ---
 
@@ -87,25 +165,19 @@ already sourced from before the build.
 
 Pick one:
 
-**Option A — Live ZED2i camera.** The ZED ROS 2 wrapper needs to run in its own Docker
-container (do **not** run it in the same container as this package — the two conflict
-over host networking/NVIDIA runtime access):
+**Option A — Live ZED2i camera.** See
+[Installing the ZED2i SDK](#installing-the-zed2i-sdk-for-a-live-camera) above if you
+haven't already — once the SDK and `zed-ros2-wrapper` are installed:
 
 ```bash
-docker run --runtime nvidia -it --privileged --network=host \
-  --ipc=host --pid=host \
-  -e NVIDIA_DRIVER_CAPABILITIES=all \
-  -v /dev:/dev -v /dev/shm:/dev/shm \
-  -v /usr/local/zed/resources/:/usr/local/zed/resources/ \
-  -v /usr/local/zed/settings/:/usr/local/zed/settings/ \
-  --name zed_ros2 zed_ros2_configured
-```
-
-then, inside that container:
-
-```bash
+source ~/zed_ros2_ws/install/local_setup.bash
 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i body_trk_enabled:=true
 ```
+
+If you're running this package and the ZED wrapper in separate containers rather than
+both natively on the host, run the wrapper in its own container — don't share a
+container with this package, since the two can conflict over host networking/NVIDIA
+runtime access.
 
 **Option B — A provided rosbag.** If someone gave you a recorded bag instead of camera
 access, just play it back — no Docker, no camera, nothing else required:
