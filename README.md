@@ -1,4 +1,4 @@
-# Teleoperation Humanoid
+# Teleoperation Humanoid - MarkerlessTeleop
 
 Real-time teleoperation of humanoid robots from a **ZED2i** stereo camera's 3D skeleton
 tracking (BODY_18 format). A person stands in front of the camera; the robot mirrors
