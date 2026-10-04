@@ -42,7 +42,8 @@ they publish `/joint_states`, and you pair that with a URDF + `robot_state_publi
   below for the full from-scratch walkthrough. If you're only ever replaying a provided
   `ros2 bag`, you still need the `zed_msgs` package installed (it defines the message
   type the bag's messages deserialize into), but you don't need the camera, the ZED SDK,
-  or the wrapper process itself.
+  or the wrapper process itself. You can use a different depth camera, a markerless RGB pose estimator,
+  or a motion-capture suit publishing to the same schema.
 - **Pepper / NAO only**: the SoftBank/Aldebaran NAOqi `qi` Python SDK, importable in the
   same Python environment you run this package with. **Run Pepper/NAO teleoperation on
   the host, not inside a devcontainer** — we hit a reproducible `RuntimeError: No
