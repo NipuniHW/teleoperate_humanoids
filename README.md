@@ -64,7 +64,8 @@ they publish `/joint_states`, and you pair that with a URDF + `robot_state_publi
 
 ## Installing the ZED2i SDK (for a live camera)
 
-Skip this whole section if you're only ever replaying a provided `ros2 bag` — you don't
+Skip this whole section if you're using another body tracking architecture or if you're 
+only ever replaying a provided `ros2 bag` — you don't
 need a camera, the SDK, or any of the below. If you have a physical ZED2i and want to
 drive a robot from it directly, here's the real, from-scratch path (verified against
 Stereolabs' current official docs, not the parent repo's prebuilt Docker image, which
