@@ -2,10 +2,7 @@
 """
 teleoperation_humanoid/robots/unitree_g1.py
 
-Drives the Unitree G1 via ZED2i BODY_18 skeleton tracking, by publishing
-sensor_msgs/JointState. This backend has no direct hardware/sim binding of
-its own — pair it with a URDF + robot_state_publisher (RViz) or your own
-sim/hardware bridge that consumes /joint_states.
+Drives the Unitree G1 via ZED2i BODY_18 skeleton tracking
 
 For visualization, this repo's companion `robot_description` package
 provides a G1 URDF and an RViz launch file (see the top-level README):
