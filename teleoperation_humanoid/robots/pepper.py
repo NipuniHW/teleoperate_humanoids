@@ -2,14 +2,13 @@
 """
 teleoperation_humanoid/robots/pepper.py
 
-Drives SoftBank Pepper via ZED2i BODY_18 skeleton tracking — the same IK as
-scripts/teleoperate_pepper.py in the parent repository, ported here.
+Drives SoftBank Pepper via ZED2i BODY_18 skeleton tracking.
 
 Requires the SoftBank/Aldebaran NAOqi `qi` Python SDK, which must be
 importable in the same Python environment you run this package with.
 
 Run:
-    ros2 run teleoperation_humanoid teleop_pepper --robot-ip <ip> --robot-port 9559
+    ros2 run teleoperation_humanoid teleop_pepper --robot-ip <ip> --robot-port <port>
 """
 
 import argparse
