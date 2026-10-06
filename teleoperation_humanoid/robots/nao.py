@@ -8,7 +8,7 @@ Requires the SoftBank/Aldebaran NAOqi `qi` Python SDK, which is not
 pip-installable — see the package README for how to obtain it.
 
 Run:
-    ros2 run teleoperation_humanoid teleop_nao --robot-ip <ip> --robot-port 9559
+    ros2 run teleoperation_humanoid teleop_nao --robot-ip <ip> --robot-port <port>
 """
 
 import argparse
